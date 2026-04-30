@@ -2,118 +2,67 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MBG Karadenan 6 - Premium Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MBG Karadenan 6 - Mobile Simple</title>
     
-    <!-- Google Fonts & Leaflet -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <!-- Link ke file CSS eksternal -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <header>
-    <div class="brand-section">
-        <img src="https://lh3.googleusercontent.com/d/1RET3S2WltatRYTWwjfcKVRI5R_xPR1_k" alt="Logo MBG" class="logo-website">
-        <h1>MBG KARADENAN 6</h1>
+    <div class="brand">
+        <img src="https://lh3.googleusercontent.com/d/1RET3S2WltatRYTWwjfcKVRI5R_xPR1_k" alt="Logo">
+        <span>MBG KARADENAN 6</span>
     </div>
-    <div class="header-info" id="gps-status">Monitoring Lokasi</div>
 </header>
 
-<div class="main-content">
-    <aside>
-        <h2>Daftar Distribusi</h2>
-        <div id="location-list"></div>
-    </aside>
+<div id="map"></div>
 
-    <div id="map-container">
-        <div id="map"></div>
-    </div>
+<!-- Daftar Lokasi Simpel (Horizontal di Mobile) -->
+<div class="bottom-nav">
+    <div id="location-list" class="scroll-container"></div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    const map = L.map('map').setView([-6.505, 106.810], 14);
+    const map = L.map('map', { zoomControl: false }).setView([-6.505, 106.810], 14);
 
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        attribution: 'Esri, Maxar, Earthstar Geographics'
+        attribution: 'Esri Satellite'
     }).addTo(map);
 
+    // Data dari sumber utama
     const dataMBG = [
-        {
-            nama: "Bilal bin Rabah",
-            lat: -6.498867, //
-            lng: 106.815814, //[cite: 1]
-            penerima: 100, PK: 57, PB: 43,
-            coords: "6°29'55.92\"S, 106°48'56.93\"E" //[cite: 1]
-        },
-        {
-            nama: "SD Tanbihul Ghofilin",
-            lat: -6.500194, //[cite: 1]
-            lng: 106.802939, //[cite: 1]
-            penerima: 185, PK: 24, PB: 161,
-            coords: "6°30'0.70\"S, 106°48'10.58\"E" //[cite: 1]
-        },
-        {
-            nama: "MTS & MA Tanbihul Ghofilin",
-            lat: -6.500194, //[cite: 1]
-            lng: 106.802939, //[cite: 1]
-            penerima: 116, PK: 0, PB: 116,
-            coords: "6°30'0.70\"S, 106°48'10.58\"E" //[cite: 1]
-        },
-        {
-            nama: "SMK Migas",
-            lat: -6.523475, //[cite: 1]
-            lng: 106.806594, //[cite: 1]
-            penerima: 37, PK: 0, PB: 37,
-            coords: "6°31'24.51\"S, 106°48'23.74\"E" //[cite: 1]
-        }
+        { nama: "Bilal bin Rabah", lat: -6.498867, lng: 106.815814, p: 100, pb: 43, pk: 57 },[cite: 1, 2]
+        { nama: "SD Tanbihul Ghofilin", lat: -6.500194, lng: 106.802939, p: 185, pb: 161, pk: 24 },[cite: 1, 2]
+        { nama: "MTS/MA Tanbihul", lat: -6.500194, lng: 106.802939, p: 116, pb: 116, pk: 0 },[cite: 2]
+        { nama: "SMK Migas", lat: -6.523475, lng: 106.806594, p: 37, pb: 37, pk: 0 }[cite: 1, 2]
     ];
 
-    const markers = {};
-
-    dataMBG.forEach((loc, index) => {
+    dataMBG.forEach((loc) => {
         const marker = L.marker([loc.lat, loc.lng]).addTo(map);
-        markers[index] = marker;
+        marker.bindPopup(`<b>${loc.nama}</b><br>Total: ${loc.p} Porsi`);[cite: 2]
 
-        const popupContent = `
-            <div class="popup-box">
-                <h3>${loc.nama}</h3>
-                <div class="count">${loc.penerima}</div>
-                <div style="font-size: 0.7rem; color: #6B7280; margin-top: 5px;">PENERIMA MANFAAT</div>
-            </div>
-        `;
-        marker.bindPopup(popupContent);
-
-        const listContainer = document.getElementById('location-list');
+        const list = document.getElementById('location-list');
         const card = document.createElement('div');
-        card.className = 'location-card';
+        card.className = 'mini-card';
         card.innerHTML = `
             <strong>${loc.nama}</strong>
-            <small>${loc.coords}</small>
-            <div class="tag-container">
-                <div class="beneficiary-tag main-tag">${loc.penerima} Total</div>
-                <div class="beneficiary-tag">PB: ${loc.PB}</div>
-                <div class="beneficiary-tag">PK: ${loc.PK}</div>
-            </div>
+            <div class="stats">📦 ${loc.p} | 🔵 ${loc.pb} | ⚪ ${loc.pk}</div>
         `;
         
         card.onclick = () => {
-            map.flyTo([loc.lat, loc.lng], 18, { duration: 1.5 });
+            map.flyTo([loc.lat, loc.lng], 18);
             marker.openPopup();
-            // Scroll ke peta pada tampilan mobile
-            if (window.innerWidth < 768) {
-                document.getElementById('map-container').scrollIntoView({ behavior: 'smooth' });
-            }
         };
-        listContainer.appendChild(card);
+        list.appendChild(card);
     });
 
     map.locate({setView: false, watch: true});
     map.on('locationfound', (e) => {
-        L.circleMarker(e.latlng, { radius: 7, color: '#3B82F6', fillOpacity: 1, fillColor: '#FFFFFF' }).addTo(map)
-            .bindPopup("Posisi Distribusi Saat Ini");
+        L.circleMarker(e.latlng, { radius: 6, color: '#3B82F6', fillOpacity: 1 }).addTo(map);
     });
 </script>
 </body>
