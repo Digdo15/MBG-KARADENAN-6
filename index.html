@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MBG Karadenan 6 - Sistem Distribusi</title>
+    <title>MBG Karadenan 6 - Sistem Distribusi & Dapur</title>
     
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -11,7 +11,8 @@
 
     <style>
         :root {
-            --primary-color: #2E7D32; /* Hijau segar untuk tema makanan/MBG */
+            --primary-color: #2E7D32; 
+            --secondary-color: #4CAF50;
             --bg-color: #f4f6f8;
             --text-color: #333;
         }
@@ -41,23 +42,35 @@
             display: grid;
             grid-template-columns: 1fr 2fr;
             gap: 20px;
+            align-items: start; /* Mencegah kolom memanjang jika tidak perlu */
+        }
+
+        .left-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
         }
 
         @media (max-width: 768px) {
             .container { grid-template-columns: 1fr; }
         }
 
-        /* Control Panel */
+        /* Panels */
         .panel {
             background: white;
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            height: fit-content;
         }
 
-        .panel h2 { margin-bottom: 15px; font-size: 1.2rem; border-bottom: 2px solid var(--primary-color); padding-bottom: 10px;}
+        .panel h2 { 
+            margin-bottom: 15px; 
+            font-size: 1.2rem; 
+            border-bottom: 2px solid var(--primary-color); 
+            padding-bottom: 10px;
+        }
         
+        /* Form Routing */
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; margin-bottom: 8px; font-weight: bold; }
         .form-group select {
@@ -69,12 +82,48 @@
         }
 
         .status-box {
-            margin-top: 20px;
+            margin-top: 15px;
             padding: 15px;
             background-color: #e8f5e9;
             border-left: 4px solid var(--primary-color);
             border-radius: 4px;
             font-size: 0.9rem;
+        }
+
+        /* Struktur Dapur List */
+        .kitchen-structure {
+            list-style: none;
+        }
+
+        .kitchen-structure li {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .kitchen-structure li:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .kitchen-structure .icon {
+            font-size: 1.5rem;
+            background: #e8f5e9;
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        .kitchen-structure .details strong {
+            display: block;
+            color: var(--primary-color);
+            margin-bottom: 2px;
+        }
+
+        .kitchen-structure .details span {
+            font-size: 0.85rem;
+            color: #666;
         }
 
         /* Map Area */
@@ -85,7 +134,7 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         }
         
-        #map { height: 70vh; width: 100%; border-radius: 8px; z-index: 1; }
+        #map { height: 75vh; width: 100%; border-radius: 8px; z-index: 1; }
 
         /* Footer */
         footer {
@@ -101,41 +150,93 @@
 
     <header>
         <h1>🍱 MBG Karadenan 6</h1>
-        <div>Hub Distribusi Terpadu</div>
+        <div>Hub Distribusi & Dapur Terpadu</div>
     </header>
 
     <div class="container">
-        <!-- Panel Kontrol -->
-        <div class="panel">
-            <h2>Kontrol Rute Live</h2>
+        
+        <!-- Sidebar Kiri: Kontrol & Informasi -->
+        <div class="left-sidebar">
             
-            <div class="form-group">
-                <label for="destination">Pilih Titik Distribusi:</label>
-                <select id="destination">
-                    <option value="">-- Pilih Lokasi Tujuan --</option>
-                    <option value="-6.498867,106.815814">Masjid Bilal bin Rabah</option>
-                    <option value="-6.500194,106.802939">SD Tanbihul Ghofilin</option>
-                    <option value="-6.523475,106.806594">SMK Migas</option>
-                </select>
+            <!-- Panel 1: Kontrol Rute -->
+            <div class="panel">
+                <h2>Navigasi Kurir</h2>
+                
+                <div class="form-group">
+                    <label for="destination">Pilih Titik Distribusi:</label>
+                    <select id="destination">
+                        <option value="">-- Pilih Lokasi Tujuan --</option>
+                        <option value="-6.498867,106.815814">Masjid Bilal bin Rabah</option>
+                        <option value="-6.500194,106.802939">SD Tanbihul Ghofilin</option>
+                        <option value="-6.523475,106.806594">SMK Migas</option>
+                    </select>
+                </div>
+
+                <div class="status-box" id="status-text">
+                    <strong>Status GPS:</strong> Menunggu izin lokasi...
+                </div>
             </div>
 
-            <div class="status-box" id="status-text">
-                <strong>Status GPS:</strong> Menunggu izin lokasi...
+            <!-- Panel 2: Struktur Dapur -->
+            <div class="panel">
+                <h2>Struktur Dapur Utama</h2>
+                <ul class="kitchen-structure">
+                    <li>
+                        <div class="icon">📦</div>
+                        <div class="details">
+                            <strong>Bahan Baku</strong>
+                            <span>Penerimaan, pengecekan kualitas fisik, dan penyimpanan stok logistik harian.</span>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="icon">👩‍⚕️</div>
+                        <div class="details">
+                            <strong>Ahli Gizi</strong>
+                            <span>Perencanaan menu, penakaran kalori, dan *Quality Control* (QC) nutrisi.</span>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="icon">👨‍🍳</div>
+                        <div class="details">
+                            <strong>Pengolahan</strong>
+                            <span>Proses memasak (*cooking*) dan preparasi bumbu/sayur dengan standar sanitasi tinggi.</span>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="icon">🍱</div>
+                        <div class="details">
+                            <strong>Pemorsian</strong>
+                            <span>Penimbangan dan *packing* makanan ke dalam wadah sesuai takaran gizi.</span>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="icon">🍽️</div>
+                        <div class="details">
+                            <strong>Perlengkapan</strong>
+                            <span>Pencucian alat masak/wadah, sterilisasi, dan inventarisasi barang dapur.</span>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="icon">🚚</div>
+                        <div class="details">
+                            <strong>Distribusi</strong>
+                            <span>Pemuatan boks makanan ke armada dan pengiriman via rute navigasi.</span>
+                        </div>
+                    </li>
+                </ul>
             </div>
-            
-            <p style="margin-top: 15px; font-size: 0.85rem; color: #666;">
-                *Pastikan GPS perangkat Anda aktif untuk menggunakan fitur rute otomatis.
-            </p>
+
         </div>
 
-        <!-- Peta -->
+        <!-- Kolom Kanan: Peta -->
         <div class="map-container">
             <div id="map"></div>
         </div>
+
     </div>
 
     <footer>
-        &copy; 2026 Tim Distribusi MBG Karadenan 6. All rights reserved.
+        &copy; 2026 Operasional MBG Karadenan 6. All rights reserved.
     </footer>
 
     <!-- Leaflet & Routing Machine JS -->
@@ -164,8 +265,8 @@
             userLocation = e.latlng;
             statusText.innerHTML = "<strong>Status GPS:</strong> Lokasi Anda ditemukan. Silakan pilih tujuan.";
             statusText.style.backgroundColor = "#e8f5e9";
+            statusText.style.borderLeftColor = "#2E7D32";
             
-            // Tambahkan/Update marker posisi Anda
             if(userMarker) {
                 userMarker.setLatLng(userLocation);
             } else {
@@ -177,7 +278,6 @@
                 }).addTo(map).bindPopup("Posisi Anda Saat Ini").openPopup();
             }
 
-            // Jika sedang ada rute berjalan, update titik awalnya secara live
             if (routingControl && destinationSelect.value !== "") {
                 const destCoords = destinationSelect.value.split(',');
                 const destLatLng = L.latLng(destCoords[0], destCoords[1]);
@@ -187,7 +287,7 @@
 
         // Jika GPS gagal/ditolak
         map.on('locationerror', function(e) {
-            statusText.innerHTML = "<strong>Status GPS:</strong> Gagal mendapatkan lokasi. Pastikan GPS aktif dan izin diberikan.";
+            statusText.innerHTML = "<strong>Status GPS:</strong> Gagal mendapatkan lokasi. Pastikan GPS aktif.";
             statusText.style.backgroundColor = "#ffebee";
             statusText.style.borderLeftColor = "red";
         });
@@ -198,12 +298,11 @@
 
             if (!userLocation) {
                 alert("Sistem belum menemukan lokasi GPS Anda. Tunggu sebentar atau pastikan GPS menyala.");
-                this.value = ""; // Reset dropdown
+                this.value = ""; 
                 return;
             }
 
             if (selectedValue === "") {
-                // Hapus rute jika pilih "Pilih Lokasi"
                 if (routingControl) {
                     map.removeControl(routingControl);
                     routingControl = null;
@@ -212,16 +311,13 @@
                 return;
             }
 
-            // Ambil koordinat dari value dropdown
             const coords = selectedValue.split(',');
-            const destLatLng = L.latLng(coords[0], coords[1]); // Koordinat dari file sumber[cite: 1]
+            const destLatLng = L.latLng(coords[0], coords[1]);
 
-            // Hapus rute lama jika ada
             if (routingControl) {
                 map.removeControl(routingControl);
             }
 
-            // Buat Rute Baru dari Posisi Live ke Tujuan
             routingControl = L.Routing.control({
                 waypoints: [
                     userLocation,
@@ -233,13 +329,11 @@
                     styles: [{color: '#2E7D32', opacity: 0.8, weight: 6}]
                 },
                 createMarker: function(i, waypoint, n) {
-                    // Custom popup text untuk marker
                     let text = (i === 0) ? "Lokasi Anda" : destinationSelect.options[destinationSelect.selectedIndex].text;
                     return L.marker(waypoint.latLng).bindPopup(text);
                 }
             }).addTo(map);
         });
-
     </script>
 </body>
 </html>
