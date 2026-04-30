@@ -3,75 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MBG Karadenan 6 - Auto-Route Mobil</title>
+    <title>Sistem Polyline Otomatis - MBG Karadenan 6</title>
     
+    <!-- Leaflet & Routing Machine -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
 
     <style>
-        :root { --primary: #2E7D32; --dark: #1b5e20; }
-        body { margin: 0; font-family: sans-serif; background: #f0f2f5; display: flex; flex-direction: column; height: 100vh; }
+        :root { --primary: #2E7D32; --bg: #f8f9fa; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; flex-direction: column; height: 100vh; }
         
-        header { background: var(--primary); color: white; padding: 15px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); z-index: 1000; }
+        header { background: var(--primary); color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.2); z-index: 1000; }
         
-        .main-layout { display: flex; flex: 1; overflow: hidden; }
-        
-        #sidebar { width: 350px; background: white; padding: 20px; box-shadow: 2px 0 5px rgba(0,0,0,0.1); z-index: 999; overflow-y: auto; }
+        .main-container { display: flex; flex: 1; overflow: hidden; }
+        #sidebar { width: 360px; background: white; border-right: 1px solid #ddd; padding: 20px; overflow-y: auto; z-index: 999; }
         #map { flex: 1; z-index: 1; }
 
-        .btn-route { 
-            width: 100%; padding: 12px; background: var(--primary); color: white; border: none; 
-            border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px;
+        .dest-card {
+            border: 2px solid #eee; border-radius: 10px; padding: 15px; margin-bottom: 15px;
+            cursor: pointer; transition: all 0.3s ease; position: relative;
         }
-        .btn-route:hover { background: var(--dark); }
+        .dest-card:hover { border-color: var(--primary); background: #f1f8e9; }
+        .dest-card.active { border-color: var(--primary); background: #e8f5e9; border-left: 8px solid var(--primary); }
 
-        .location-card {
-            border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin-bottom: 10px;
-            cursor: pointer; transition: 0.3s;
+        .route-info { 
+            background: #fff; padding: 10px; border-radius: 5px; margin-top: 10px; 
+            font-size: 0.85rem; border: 1px dashed var(--primary); display: none;
         }
-        .location-card:hover { border-color: var(--primary); background: #f1f8e9; }
-        .location-card.active { border-left: 5px solid var(--primary); background: #e8f5e9; }
 
-        .stats-badge { font-size: 0.75rem; background: #eee; padding: 2px 8px; border-radius: 10px; float: right; }
+        .gps-status { font-size: 0.8rem; margin-bottom: 15px; padding: 8px; border-radius: 5px; text-align: center; }
+        .gps-on { background: #e8f5e9; color: #2E7D32; }
+        .gps-off { background: #ffebee; color: #c62828; }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>MBG Karadenan 6 - Smart Router</h1>
+    <h2 style="margin:0">🍱 MBG Karadenan 6</h2>
+    <div id="clock">Navigasi Polyline OSM</div>
 </header>
 
-<div class="main-layout">
+<div class="main-container">
     <div id="sidebar">
-        <h3>📍 Pilih Tujuan Distribusi</h3>
-        <p style="font-size: 0.8rem; color: #666;">Mode: 🚗 Mobil (Menghindari rute sempit)</p>
+        <div id="gps-indicator" class="gps-status gps-off">📡 Mencari Lokasi GPS...</div>
         
-        <div id="location-list">
-            <!-- Lokasi dari file koordinat -->
-            <div class="location-card" onclick="selectDest(-6.498867, 106.815814, 'Bilal bin Rabah', this)">
-                <span class="stats-badge" id="count-bilal">0x</span>
-                <strong>Bilal bin Rabah</strong><br>
-                <small>6°29'55.92"S, 106°48'56.93"E</small>
-            </div>
-
-            <div class="location-card" onclick="selectDest(-6.500194, 106.802939, 'SD Tanbihul Ghofilin', this)">
-                <span class="stats-badge" id="count-sd">0x</span>
-                <strong>SD Tanbihul Ghofilin</strong><br>
-                <small>6°30'0.70"S, 106°48'10.58"E</small>
-            </div>
-
-            <div class="location-card" onclick="selectDest(-6.523475, 106.806594, 'SMK Migas', this)">
-                <span class="stats-badge" id="count-smk">0x</span>
-                <strong>SMK Migas</strong><br>
-                <small>6°31'24.51"S, 106°48'23.74"E</small>
-            </div>
+        <h3 style="margin-bottom:15px; color: var(--primary);">Pilih Tujuan Pengiriman</h3>
+        
+        <!-- Lokasi berdasarkan data koordinat -->
+        <div class="dest-card" onclick="updateRoute(-6.498867, 106.815814, 'Bilal bin Rabah', this)">
+            <strong>Bilal bin Rabah</strong><br>
+            <small>6°29'55.92"S, 106°48'56.93"E</small>
+            <div class="route-info" id="info-bilal"></div>
         </div>
 
-        <hr style="margin: 20px 0;">
-        <div id="route-info">
-            <strong>Estimasi Perjalanan:</strong>
-            <p id="eta-text">Pilih lokasi untuk melihat rute.</p>
+        <div class="dest-card" onclick="updateRoute(-6.500194, 106.802939, 'SD Tanbihul Ghofilin', this)">
+            <strong>SD Tanbihul Ghofilin</strong>[cite: 1]<br>
+            <small>6°30'0.70"S, 106°48'10.58"E</small>
+            <div class="route-info" id="info-sd"></div>
         </div>
+
+        <div class="dest-card" onclick="updateRoute(-6.523475, 106.806594, 'SMK Migas', this)">
+            <strong>SMK Migas</strong>[cite: 1]<br>
+            <small>6°31'24.51"S, 106°48'23.74"E</small>
+            <div class="route-info" id="info-smk"></div>
+        </div>
+
+        <hr style="margin:20px 0; opacity: 0.2;">
+        <p style="font-size: 0.8rem; color: #666;">
+            *Polyline akan mengikuti jalan raya (OSM Car Profile).<br>
+            *Rute akan otomatis bergeser jika posisi Anda berubah.
+        </p>
     </div>
 
     <div id="map"></div>
@@ -81,70 +82,96 @@
 <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 
 <script>
-    // Inisialisasi Peta
+    // 1. Inisialisasi Peta
     const map = L.map('map').setView([-6.505, 106.810], 14);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
 
+    let userLatLng = null;
     let routingControl = null;
-    let userPos = null;
+    let currentDest = null;
+    let userMarker = null;
 
-    // Sistem Learning Sederhana (Mengingat jumlah kunjungan)
-    const learningData = JSON.parse(localStorage.getItem('mbg_learning')) || { 'Bilal': 0, 'SD': 0, 'SMK': 0 };
-    updateBadges();
-
-    // Dapatkan lokasi live
+    // 2. Monitoring Lokasi GPS Secara Live
     map.locate({setView: true, watch: true, enableHighAccuracy: true});
-    map.on('locationfound', (e) => {
-        userPos = e.latlng;
-        L.circle(userPos, {radius: 10, color: 'blue'}).addTo(map);
+
+    map.on('locationfound', function(e) {
+        userLatLng = e.latlng;
+        
+        // Update Marker Posisi User
+        if (userMarker) {
+            userMarker.setLatLng(userLatLng);
+        } else {
+            userMarker = L.circleMarker(userLatLng, {
+                radius: 9, color: '#fff', weight: 3, fillOpacity: 1, fillColor: '#2196F3'
+            }).addTo(map).bindPopup("Lokasi Anda").openPopup();
+        }
+
+        const indicator = document.getElementById('gps-indicator');
+        indicator.innerText = "📡 GPS Aktif (Posisi Terkunci)";
+        indicator.className = "gps-status gps-on";
+
+        // Fitur Learning/Update Otomatis: Jika rute sedang aktif, perbarui polyline dari titik baru
+        if (routingControl && currentDest) {
+            routingControl.setWaypoints([userLatLng, currentDest]);
+        }
     });
 
-    function selectDest(lat, lng, name, element) {
-        if (!userPos) {
-            alert("Sedang mencari lokasi GPS Anda...");
+    map.on('locationerror', function() {
+        document.getElementById('gps-indicator').innerText = "❌ GPS Error / Izin Ditolak";
+        document.getElementById('gps-indicator').className = "gps-status gps-off";
+    });
+
+    // 3. Fungsi Pembuatan Rute & Polyline
+    function updateRoute(lat, lng, name, element) {
+        if (!userLatLng) {
+            alert("Sistem sedang menunggu koordinat GPS Anda.");
             return;
         }
 
-        // Visual Feedback
-        document.querySelectorAll('.location-card').forEach(c => c.classList.remove('active'));
+        currentDest = L.latLng(lat, lng);
+
+        // Visual Feedback Sidebar
+        document.querySelectorAll('.dest-card').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.route-info').forEach(i => i.style.display = 'none');
         element.classList.add('active');
+        const infoBox = element.querySelector('.route-info');
+        infoBox.style.display = 'block';
+        infoBox.innerText = "Menghitung rute terbaik...";
 
-        // Update Learning Data
-        if(name.includes('Bilal')) learningData.Bilal++;
-        if(name.includes('SD')) learningData.SD++;
-        if(name.includes('SMK')) learningData.SMK++;
-        localStorage.setItem('mbg_learning', JSON.stringify(learningData));
-        updateBadges();
+        // Bersihkan Polyline lama jika ada
+        if (routingControl) {
+            map.removeControl(routingControl);
+        }
 
-        // Buat Rute Otomatis
-        if (routingControl) map.removeControl(routingControl);
-
+        // Buat Polyline Baru menggunakan OSM Router
         routingControl = L.Routing.control({
-            waypoints: [userPos, L.latLng(lat, lng)],
+            waypoints: [userLatLng, currentDest],
             router: L.Routing.osrmv1({
                 serviceUrl: 'https://router.project-osrm.org/route/v1',
-                profile: 'car' // Fitur khusus rute mobil agar tidak masuk gang sempit
+                profile: 'car' // Profil mobil untuk menghindari rute non-kendaraan[cite: 1]
             }),
-            lineOptions: { styles: [{ color: '#2E7D32', weight: 6 }] },
+            lineOptions: {
+                styles: [{ color: '#2E7D32', opacity: 0.8, weight: 8 }] // Desain Polyline
+            },
+            createMarker: function(i, wp) {
+                if (i === 1) return L.marker(wp.latLng).bindPopup("Tujuan: " + name);
+                return null;
+            },
             language: 'id',
-            createMarker: function() { return null; } // Bersihkan marker default
+            addWaypoints: false
         }).on('routesfound', function(e) {
             const routes = e.routes[0];
-            const dist = (routes.summary.totalDistance / 1000).toFixed(2);
+            const distance = (routes.summary.totalDistance / 1000).toFixed(2);
             const time = Math.round(routes.summary.totalTime / 60);
-            document.getElementById('eta-text').innerHTML = 
-                `Jarak: ${dist} km <br> Waktu: ±${time} menit (Mobil)`;
+            infoBox.innerHTML = `<strong>Jarak:</strong> ${distance} km <br> <strong>Estimasi:</strong> ${time} menit (Mobil)`;
         }).addTo(map);
 
-        // Tambahkan Marker Tujuan
-        L.marker([lat, lng]).addTo(map).bindPopup(`<b>Tujuan: ${name}</b>`).openPopup();
-    }
-
-    function updateBadges() {
-        document.getElementById('count-bilal').innerText = learningData.Bilal + 'x';
-        document.getElementById('count-sd').innerText = learningData.SD + 'x';
-        document.getElementById('count-smk').innerText = learningData.SMK + 'x';
+        // Zoom otomatis untuk melihat seluruh rute
+        map.fitBounds(L.latLngBounds([userLatLng, currentDest]), {padding: [50, 50]});
     }
 </script>
+
 </body>
 </html>
