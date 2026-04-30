@@ -3,133 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MBG Karadenan 6 - Mobile & Desktop</title>
+    <title>MBG Karadenan 6 - Interactive Mobile</title>
     
-    <!-- Google Fonts & Leaflet -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
     <style>
         :root {
-            --primary-blue: #1E3A8A;
-            --secondary-blue: #3B82F6;
-            --bg-gray: #F3F4F6;
+            --primary: #1E3A8A;
+            --accent: #3B82F6;
             --white: #FFFFFF;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: #eee; }
 
-        body {
-            background-color: var(--bg-gray);
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        /* Header Responsive */
         header {
             background: var(--white);
-            min-height: 70px;
+            padding: 12px 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 1100;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .brand { display: flex; align-items: center; gap: 10px; }
+        .brand img { height: 30px; }
+        .brand h1 { font-size: 1rem; color: var(--primary); font-weight: 800; }
+
+        #map { flex-grow: 1; width: 100%; z-index: 1; }
+
+        /* Floating Button untuk Buka List di Mobile */
+        .toggle-list-btn {
+            position: absolute;
+            bottom: 25px;
+            right: 20px;
+            z-index: 1050;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 30px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            display: block;
+        }
+
+        /* Bottom Sheet / Sidebar List */
+        aside {
+            position: fixed;
+            bottom: -100%; /* Sembunyi di bawah */
+            left: 0; right: 0;
+            background: var(--white);
+            z-index: 2000;
+            transition: bottom 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 20px 20px 0 0;
+            max-height: 70vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 -5px 25px rgba(0,0,0,0.2);
+        }
+
+        aside.active { bottom: 0; }
+
+        .list-header {
+            padding: 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0 15px;
-            border-bottom: 1px solid #E5E7EB;
-            z-index: 1100;
+            border-bottom: 1px solid #eee;
         }
 
-        .brand-section { display: flex; align-items: center; gap: 10px; }
-        .logo-website { height: 40px; width: auto; }
-        header h1 { font-size: 1.1rem; font-weight: 800; color: var(--primary-blue); }
-
-        .header-info {
-            display: none; /* Sembunyikan info teks di mobile agar tidak sempit */
-            font-size: 0.75rem;
-            background: var(--bg-gray);
-            padding: 5px 12px;
-            border-radius: 15px;
-        }
-
-        /* Layout Utama: Default Stack (Mobile) */
-        .main-content {
-            display: flex;
-            flex-direction: column;
-            height: calc(100vh - 70px);
-        }
-
-        #map {
-            width: 100%;
-            height: 50%; /* Setengah layar untuk peta di mobile */
-            flex-shrink: 0;
-        }
-
-        /* Sidebar/Bottom List */
-        aside {
-            background: var(--white);
-            padding: 15px;
-            overflow-y: auto;
-            flex-grow: 1;
-            border-top: 2px solid #E5E7EB;
-        }
-
-        aside h2 {
-            font-size: 0.8rem;
-            color: #9CA3AF;
-            margin-bottom: 15px;
-            text-transform: uppercase;
-        }
-
-        .location-card {
-            background: var(--white);
-            border: 1px solid #E5E7EB;
-            border-radius: 10px;
-            padding: 12px;
-            margin-bottom: 10px;
+        .close-btn {
+            background: #f0f0f0;
+            border: none;
+            width: 30px; height: 30px;
+            border-radius: 50%;
+            font-weight: 800;
             cursor: pointer;
         }
 
-        .location-card strong { display: block; font-size: 0.95rem; color: var(--primary-blue); }
-        .location-card span { font-size: 0.75rem; color: #6B7280; display: block; margin: 4px 0; }
+        .scroll-area { padding: 15px; overflow-y: auto; }
 
-        .tag-group { display: flex; flex-wrap: wrap; gap: 5px; }
-        .beneficiary-tag {
-            padding: 4px 8px;
-            background: var(--primary-blue);
-            color: var(--white);
-            border-radius: 6px;
-            font-size: 0.7rem;
-            font-weight: 600;
+        .location-card {
+            background: #F9FAFB;
+            border: 1px solid #E5E7EB;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 10px;
         }
 
-        /* DESKTOP VIEW (Lebar layar > 768px) */
+        .location-card strong { color: var(--primary); font-size: 0.9rem; display: block; }
+        .tag-group { display: flex; gap: 5px; margin-top: 8px; }
+        .tag { font-size: 0.65rem; padding: 3px 7px; background: var(--accent); color: white; border-radius: 5px; font-weight: 600; }
+
+        /* Tablet/Desktop View */
         @media (min-width: 768px) {
-            header h1 { font-size: 1.4rem; }
-            .header-info { display: block; }
-            .main-content { flex-direction: row; }
-            #map { height: 100%; width: 70%; order: 2; }
-            aside { width: 30%; height: 100%; order: 1; border-top: none; border-right: 1px solid #E5E7EB; }
-            .logo-website { height: 50px; }
+            body { flex-direction: row; }
+            header { position: absolute; top: 15px; left: 15px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 300px; }
+            .toggle-list-btn { display: none; }
+            aside {
+                position: relative; bottom: 0; left: 0;
+                width: 350px; height: 100vh; max-height: none;
+                border-radius: 0; border-right: 1px solid #ddd;
+            }
+            .close-btn { display: none; }
         }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="brand-section">
-        <img src="https://lh3.googleusercontent.com/d/1RET3S2WltatRYTWwjfcKVRI5R_xPR1_k" alt="Logo" class="logo-website">
+    <div class="brand">
+        <img src="https://lh3.googleusercontent.com/d/1RET3S2WltatRYTWwjfcKVRI5R_xPR1_k" alt="Logo">
         <h1>MBG KARADENAN 6</h1>
     </div>
-    <div class="header-info">Penerima Manfaat</div>
 </header>
 
-<div class="main-content">
-    <div id="map"></div>
-    <aside>
-        <h2>Daftar Distribusi</h2>
-        <div id="location-list"></div>
-    </aside>
-</div>
+<div id="map"></div>
+
+<button class="toggle-list-btn" onclick="toggleList()">📋 Lihat Daftar</button>
+
+<aside id="bottomSheet">
+    <div class="list-header">
+        <h2 style="font-size: 1rem; color: #666;">DAFTAR DISTRIBUSI</h2>
+        <button class="close-btn" onclick="toggleList()">✕</button>
+    </div>
+    <div class="scroll-area" id="location-list"></div>
+</aside>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
@@ -139,39 +140,51 @@
         attribution: 'Esri Satellite'
     }).addTo(map);
 
+    // Data Sumber
     const dataMBG = [
-        { nama: "Bilal bin Rabah", lat: -6.498867, lng: 106.815814, p: 100, pk: 57, pb: 43, c: "6°29'55.9\"S" },
-        { nama: "SD Tanbihul Ghofilin", lat: -6.500194, lng: 106.802939, p: 185, pk: 24, pb: 161, c: "6°30'0.7\"S" },
-        { nama: "MTS & MA Tanbihul", lat: -6.500194, lng: 106.802939, p: 116, pk: 0, pb: 116, c: "6°30'0.7\"S" },
-        { nama: "SMK Migas", lat: -6.523475, lng: 106.806594, p: 37, pk: 0, pb: 37, c: "6°31'24.5\"S" },
+        { nama: "Bilal bin Rabah", lat: -6.498867, lng: 106.815814, p: 100, pb: 43, pk: 57 },
+        { nama: "SD Tanbihul Ghofilin", lat: -6.500194, lng: 106.802939, p: 185, pb: 161, pk: 24 },
+        { nama: "MTS & MA Tanbihul", lat: -6.500194, lng: 106.802939, p: 116, pb: 116, pk: 0 },
+        { nama: "SMK Migas", lat: -6.523475, lng: 106.806594, p: 37, pb: 37, pk: 0 },
     ];
 
-    dataMBG.forEach((loc) => {
-        const marker = L.marker([loc.lat, loc.lng]).addTo(map);
-        marker.bindPopup(`<b>${loc.nama}</b><br>${loc.p} Penerima`);
+    const markerGroup = L.featureGroup().addTo(map);
 
+    dataMBG.forEach((loc) => {
+        const marker = L.marker([loc.lat, loc.lng]).addTo(markerGroup);
+        marker.bindPopup(`<b>${loc.nama}</b><br>${loc.p} Porsi`);
+
+        const list = document.getElementById('location-list');
         const card = document.createElement('div');
         card.className = 'location-card';
         card.innerHTML = `
             <strong>${loc.nama}</strong>
-            <span>${loc.c}</span>
             <div class="tag-group">
-                <div class="beneficiary-tag">📦 ${loc.p} Total</div>
-                <div class="beneficiary-tag">🔵 ${loc.pb} PB</div>
-                <div class="beneficiary-tag">⚪ ${loc.pk} PK</div>
+                <span class="tag">📦 ${loc.p}</span>
+                <span class="tag">🔵 ${loc.pb}</span>
+                <span class="tag">⚪ ${loc.pk}</span>
             </div>
         `;
         
         card.onclick = () => {
             map.flyTo([loc.lat, loc.lng], 18);
             marker.openPopup();
+            if (window.innerWidth < 768) toggleList(); // Tutup list setelah klik di mobile
         };
-        document.getElementById('location-list').appendChild(card);
+        list.appendChild(card);
     });
 
+    // Otomatis atur boundary (fitBounds) berdasarkan semua titik
+    map.fitBounds(markerGroup.getBounds(), { padding: [50, 50] });
+
+    function toggleList() {
+        document.getElementById('bottomSheet').classList.toggle('active');
+    }
+
+    // GPS Posisi
     map.locate({setView: false, watch: true});
     map.on('locationfound', (e) => {
-        L.circleMarker(e.latlng, { radius: 7, color: '#3B82F6', fillOpacity: 1 }).addTo(map);
+        L.circleMarker(e.latlng, { radius: 6, color: '#3B82F6', fillOpacity: 1 }).addTo(map);
     });
 </script>
 </body>
