@@ -3,26 +3,132 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MBG Karadenan 6 - Mobile Simple</title>
+    <title>MBG Karadenan 6 - Mobile & Desktop</title>
     
+    <!-- Google Fonts & Leaflet -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="style.css">
+    
+    <style>
+        :root {
+            --primary-blue: #1E3A8A;
+            --secondary-blue: #3B82F6;
+            --bg-gray: #F3F4F6;
+            --white: #FFFFFF;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+
+        body {
+            background-color: var(--bg-gray);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Header Responsive */
+        header {
+            background: var(--white);
+            min-height: 70px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 15px;
+            border-bottom: 1px solid #E5E7EB;
+            z-index: 1100;
+        }
+
+        .brand-section { display: flex; align-items: center; gap: 10px; }
+        .logo-website { height: 40px; width: auto; }
+        header h1 { font-size: 1.1rem; font-weight: 800; color: var(--primary-blue); }
+
+        .header-info {
+            display: none; /* Sembunyikan info teks di mobile agar tidak sempit */
+            font-size: 0.75rem;
+            background: var(--bg-gray);
+            padding: 5px 12px;
+            border-radius: 15px;
+        }
+
+        /* Layout Utama: Default Stack (Mobile) */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 70px);
+        }
+
+        #map {
+            width: 100%;
+            height: 50%; /* Setengah layar untuk peta di mobile */
+            flex-shrink: 0;
+        }
+
+        /* Sidebar/Bottom List */
+        aside {
+            background: var(--white);
+            padding: 15px;
+            overflow-y: auto;
+            flex-grow: 1;
+            border-top: 2px solid #E5E7EB;
+        }
+
+        aside h2 {
+            font-size: 0.8rem;
+            color: #9CA3AF;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        .location-card {
+            background: var(--white);
+            border: 1px solid #E5E7EB;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+
+        .location-card strong { display: block; font-size: 0.95rem; color: var(--primary-blue); }
+        .location-card span { font-size: 0.75rem; color: #6B7280; display: block; margin: 4px 0; }
+
+        .tag-group { display: flex; flex-wrap: wrap; gap: 5px; }
+        .beneficiary-tag {
+            padding: 4px 8px;
+            background: var(--primary-blue);
+            color: var(--white);
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        /* DESKTOP VIEW (Lebar layar > 768px) */
+        @media (min-width: 768px) {
+            header h1 { font-size: 1.4rem; }
+            .header-info { display: block; }
+            .main-content { flex-direction: row; }
+            #map { height: 100%; width: 70%; order: 2; }
+            aside { width: 30%; height: 100%; order: 1; border-top: none; border-right: 1px solid #E5E7EB; }
+            .logo-website { height: 50px; }
+        }
+    </style>
 </head>
 <body>
 
 <header>
-    <div class="brand">
-        <img src="https://lh3.googleusercontent.com/d/1RET3S2WltatRYTWwjfcKVRI5R_xPR1_k" alt="Logo">
-        <span>MBG KARADENAN 6</span>
+    <div class="brand-section">
+        <img src="https://lh3.googleusercontent.com/d/1RET3S2WltatRYTWwjfcKVRI5R_xPR1_k" alt="Logo" class="logo-website">
+        <h1>MBG KARADENAN 6</h1>
     </div>
+    <div class="header-info">Penerima Manfaat</div>
 </header>
 
-<div id="map"></div>
-
-<!-- Daftar Lokasi Simpel (Horizontal di Mobile) -->
-<div class="bottom-nav">
-    <div id="location-list" class="scroll-container"></div>
+<div class="main-content">
+    <div id="map"></div>
+    <aside>
+        <h2>Daftar Distribusi</h2>
+        <div id="location-list"></div>
+    </aside>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -33,36 +139,39 @@
         attribution: 'Esri Satellite'
     }).addTo(map);
 
-    // Data dari sumber utama
     const dataMBG = [
-        { nama: "Bilal bin Rabah", lat: -6.498867, lng: 106.815814, p: 100, pb: 43, pk: 57 },[cite: 1, 2]
-        { nama: "SD Tanbihul Ghofilin", lat: -6.500194, lng: 106.802939, p: 185, pb: 161, pk: 24 },[cite: 1, 2]
-        { nama: "MTS/MA Tanbihul", lat: -6.500194, lng: 106.802939, p: 116, pb: 116, pk: 0 },[cite: 2]
-        { nama: "SMK Migas", lat: -6.523475, lng: 106.806594, p: 37, pb: 37, pk: 0 }[cite: 1, 2]
+        { nama: "Bilal bin Rabah", lat: -6.498867, lng: 106.815814, p: 100, pk: 57, pb: 43, c: "6°29'55.9\"S" },
+        { nama: "SD Tanbihul Ghofilin", lat: -6.500194, lng: 106.802939, p: 185, pk: 24, pb: 161, c: "6°30'0.7\"S" },
+        { nama: "MTS & MA Tanbihul", lat: -6.500194, lng: 106.802939, p: 116, pk: 0, pb: 116, c: "6°30'0.7\"S" },
+        { nama: "SMK Migas", lat: -6.523475, lng: 106.806594, p: 37, pk: 0, pb: 37, c: "6°31'24.5\"S" },
     ];
 
     dataMBG.forEach((loc) => {
         const marker = L.marker([loc.lat, loc.lng]).addTo(map);
-        marker.bindPopup(`<b>${loc.nama}</b><br>Total: ${loc.p} Porsi`);[cite: 2]
+        marker.bindPopup(`<b>${loc.nama}</b><br>${loc.p} Penerima`);
 
-        const list = document.getElementById('location-list');
         const card = document.createElement('div');
-        card.className = 'mini-card';
+        card.className = 'location-card';
         card.innerHTML = `
             <strong>${loc.nama}</strong>
-            <div class="stats">📦 ${loc.p} | 🔵 ${loc.pb} | ⚪ ${loc.pk}</div>
+            <span>${loc.c}</span>
+            <div class="tag-group">
+                <div class="beneficiary-tag">📦 ${loc.p} Total</div>
+                <div class="beneficiary-tag">🔵 ${loc.pb} PB</div>
+                <div class="beneficiary-tag">⚪ ${loc.pk} PK</div>
+            </div>
         `;
         
         card.onclick = () => {
             map.flyTo([loc.lat, loc.lng], 18);
             marker.openPopup();
         };
-        list.appendChild(card);
+        document.getElementById('location-list').appendChild(card);
     });
 
     map.locate({setView: false, watch: true});
     map.on('locationfound', (e) => {
-        L.circleMarker(e.latlng, { radius: 6, color: '#3B82F6', fillOpacity: 1 }).addTo(map);
+        L.circleMarker(e.latlng, { radius: 7, color: '#3B82F6', fillOpacity: 1 }).addTo(map);
     });
 </script>
 </body>
